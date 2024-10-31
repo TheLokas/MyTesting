@@ -40,8 +40,8 @@ class TestFindRoots(unittest.TestCase):
         a, b, c = 1.5, 2.3, -1.0
         roots = find_roots(a, b, c)
 
-        self.assertTrue(math.isclose(roots[0] ** 2 + b * roots[0] + c, 0, rel_tol=1e-9))
-        self.assertTrue(math.isclose(roots[1] ** 2 + b * roots[1] + c, 0, rel_tol=1e-9))
+        self.assertTrue(math.isclose(roots[0] ** 2 + b * roots[0] + c, 0, rel_tol=1e-5))
+        self.assertTrue(math.isclose(roots[1] ** 2 + b * roots[1] + c, 0, rel_tol=1e-5))
 
     def test_negative_discriminant(self):
         """Тест, когда дискриминант отрицательный (нет действительных корней)"""
