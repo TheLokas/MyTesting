@@ -6,7 +6,7 @@ import math
 class TestFindRoots(unittest.TestCase):
 
     def test_invalid_zero_a(self):
-        """Тест, когда коэффициент a равен 0."""
+        """Тест, когда коэффициент a равен 0. """
         with self.assertRaises(ValueError):     # Ожидается выброс ValueError
             find_roots(0, 1, 1)                 # Уравнение: 1x + 1 = 0
 
