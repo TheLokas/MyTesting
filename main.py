@@ -1,6 +1,6 @@
 import math
 
-
+#
 def find_roots(a, b, c):
     if a == b == c == 0:
         raise ValueError("Все коэффициенты равны нулю")
