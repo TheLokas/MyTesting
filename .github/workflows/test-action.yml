@@ -38,6 +38,7 @@ jobs:
 
   sonarcloud:
     runs-on: ubuntu-latest
+    needs: runt-test
     steps:
       - uses: actions/checkout@v4
         with:
