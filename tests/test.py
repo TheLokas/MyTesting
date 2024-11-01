@@ -40,7 +40,10 @@ class TestFindRoots(unittest.TestCase):
         self.assertAlmostEqual(root1, 2.0)     # Ожидается, что первый корень равен 2.0
         self.assertAlmostEqual(root2, -2.0)    # Ожидается, что второй корень равен -2.0
 
-
+    def test_invalid_zero_a(self):
+        """Тест, когда коэффициент a равен 0. """
+        with self.assertRaises(ValueError):     # Ожидается выброс ValueError
+            find_roots(0, 0, 0)
 
 if __name__ == '__main__':
     unittest.main()
