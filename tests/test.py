@@ -35,7 +35,7 @@ class TestFindRoots(unittest.TestCase):
         self.assertAlmostEqual(root2, -2.0)     # Ожидается, что второй корень равен -2.0
 
     def test_b_zero_positive_discriminant(self):
-        """Тест, когда коэффициент b равен 0. """
+        """Тест, когда коэффициент b равен 0."""
         root1, root2 = find_roots(1, 0, -4)   # Уравнение: x^2 - 4 = 0
         self.assertAlmostEqual(root1, 2.0)     # Ожидается, что первый корень равен 2.0
         self.assertAlmostEqual(root2, -2.0)    # Ожидается, что второй корень равен -2.0
