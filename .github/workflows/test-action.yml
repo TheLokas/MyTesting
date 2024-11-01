@@ -31,9 +31,6 @@ jobs:
           coverage report
           coverage xml
 
-      - name: Generate coverage HTML report
-        run: coverage html  
-
       - name: Submit coverage to Coveralls
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
@@ -49,4 +46,3 @@ jobs:
         uses: sonarsource/sonarcloud-github-action@v3.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
