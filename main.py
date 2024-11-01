@@ -6,7 +6,7 @@ def find_roots(a, b, c):
         raise ValueError("Все коэффициенты равны нулю")
 
     if a == 0:
-        raise ValueError("Коэффициент a не может быть равен нулю для квадратного уравнения")
+        raise ValueError("Коэффициент a не может быть равен нулю")
 
     discriminant = b ** 2 - 4 * a * c
     if discriminant < 0:
