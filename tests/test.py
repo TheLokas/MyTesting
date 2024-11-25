@@ -1,6 +1,6 @@
-
 import unittest
-from main import Product, Order  # Предполагается, что основной код находится в файле app.py
+from main import Product, Order
+
 
 class TestProduct(unittest.TestCase):
     # Блочные тесты для класса Product
