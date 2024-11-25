@@ -25,7 +25,6 @@ class Product:
 
 
 
-
 class Order:
     def __init__(self):
         self.products = []           # Список добавленных в заказ товаров
