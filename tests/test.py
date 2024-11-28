@@ -191,7 +191,5 @@ class TestMazeGenerator(unittest.TestCase):
         return return_value
 
 
-
-
 if __name__ == "__main__":
     unittest.main()
