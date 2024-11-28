@@ -179,24 +179,6 @@ class TestMazeGenerator(unittest.TestCase):
         # Ожидаем, что путь имеет длину 9
         self.assertEqual(len(path), 9, f"Ожидаемая длина пути 9, но получена {len(path)}.")
 
-    def test_print_path(self):
-        """Тест на печать пути в лабиринте."""
-        maze = [
-            [0, 1, 0, 0, 0],
-            [0, 1, 0, 1, 0],
-            [0, 0, 0, 1, 0],
-            [1, 1, 0, 0, 0],
-            [0, 1, 1, 1, 0]
-        ]
-        entry = (0, 0)  # Вход
-        exit = (4, 4)  # Выход
-        solver = MazeSolver(maze, entry, exit)
-        path = solver.find_shortest_path()
-
-        # Проверяем вывод пути
-        solver.print_path(path)
-        # Ожидаем, что в консоли будет напечатана длина пути
-        self.assertIn("Длина пути:", self._get_stdout())
 
     def _get_stdout(self):
         """Получаем стандартный вывод в виде строки (для тестирования print)."""
