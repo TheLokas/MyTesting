@@ -292,5 +292,28 @@ class TestMazeGenerator(unittest.TestCase):
         )
         self.assertIn(expected_output, mock_stdout.getvalue())
 
+
+    @patch('builtins.input', side_effect=['5', '5'])
+    def test_get_user_input(self, mock_input):
+        """Тест ввода данных для строк и столбцов."""
+        rows = get_user_input("Введите количество строк лабиринта: ")
+        cols = get_user_input("Введите количество столбцов лабиринта: ")
+        self.assertEqual(rows, 5)
+        self.assertEqual(cols, 5)
+
+    def test_maze_generation(self):
+        """Тест генерации лабиринта и установки входа/выхода."""
+        generator = MazeGenerator(5, 5)
+        generator.generate_maze()
+        entry, exit = generator.set_entry_and_exit()
+
+        # Проверяем, что лабиринт сгенерирован с правильными размерами
+        self.assertEqual(len(generator.maze), 5)
+        self.assertEqual(len(generator.maze[0]), 5)
+
+        # Проверяем, что точки входа и выхода находятся внутри границ
+        self.assertTrue(0 <= entry[0] < 5 and 0 <= entry[1] < 5)
+        self.assertTrue(0 <= exit[0] < 5 and 0 <= exit[1] < 5)
+
 if __name__ == "__main__":
     unittest.main()

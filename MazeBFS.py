@@ -33,12 +33,10 @@ class MazeSolver:
 
     def print_path(self, path):
         """Выводит длину пути."""
-        if not path:
-            print("Нет пути от входа до выхода.")
-            return
-
-        # Выводим длину пути
-        print(f"Длина пути: {len(path)}")
+        if len(path)>0:
+            print(f"Длина пути: {len(path)}")
+        else:
+            print('Нет пути от входа до выхода.')
 
 def get_user_input(prompt):
     """Запрашивает ввод у пользователя и проверяет, что он корректен."""
