@@ -222,6 +222,63 @@ class TestMazeGenerator(unittest.TestCase):
         # Проверяем, что вывод совпадает
         self.assertEqual(printed_output, expected_output)
 
+    def test_print_path_found(self):
+        # Задаем лабиринт с решением
+        maze = [
+            [1, 1, 1, 1, 1],
+            [1, 0, 0, 1, 1],
+            [1, 0, 0, 1, 1],
+            [1, 1, 0, 0, 1],
+            [1, 1, 1, 0, 1]
+        ]
+        entry = (1, 1)
+        exit = (4, 3)
+
+        solver = MazeSolver(maze, entry, exit)
+
+        # Имитируем путь, например, (1, 1) -> (1, 2) -> (2, 2) -> (3, 2) -> (4, 2) -> (4, 3)
+        path = [(1, 1), (1, 2), (2, 2), (3, 2), (4, 2), (4, 3)]
+
+        # Перехватываем вывод в консоль
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            solver.print_path(path)  # Вызываем метод для печати пути
+            printed_output = mock_stdout.getvalue().strip()  # Получаем строку, которую вывел метод
+
+        # Ожидаемый вывод: длина пути
+        expected_output = "Длина пути: 6"
+
+        # Проверяем, что вывод совпадает
+        self.assertEqual(printed_output, expected_output)
+
+    def test_print_path_no_solution(self):
+        # Задаем лабиринт без пути
+        maze = [
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1]
+        ]
+        entry = (1, 1)
+        exit = (4, 3)
+
+        solver = MazeSolver(maze, entry, exit)
+
+        # Путь отсутствует
+        path = []
+
+        # Перехватываем вывод в консоль
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            solver.print_path(path)  # Вызываем метод для печати пути
+            printed_output = mock_stdout.getvalue().strip()  # Получаем строку, которую вывел метод
+
+        # Ожидаемый вывод: сообщение о том, что пути нет
+        expected_output = "Нет пути от входа до выхода."
+
+        # Проверяем, что вывод совпадает
+        self.assertEqual(printed_output, expected_output)
+
+
 
 if __name__ == "__main__":
     unittest.main()
