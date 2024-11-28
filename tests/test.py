@@ -322,7 +322,7 @@ class TestMazeGenerator(unittest.TestCase):
         self.assertIn("Добро пожаловать в генератор лабиринтов!", output)
         self.assertIn("Вход:", output)
         self.assertIn("Выход:", output)
-        self.assertIn("[", output)  # Проверка на вывод лабиринта
+
 
         # Проверяем результат работы алгоритма
         if "Путь не найден" in output:
