@@ -46,7 +46,7 @@ def get_user_input(prompt):
         try:
             value = int(input(prompt))
             if value <= 2:
-                raise ValueError("Размер должен быть положительным числом.")
+                raise ValueError("Размер должен быть положительным числом")
             return value
         except ValueError as e:
             print(f"Ошибка: {e}. Попробуйте снова.")

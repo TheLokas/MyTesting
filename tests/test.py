@@ -278,7 +278,19 @@ class TestMazeGenerator(unittest.TestCase):
         # Проверяем, что вывод совпадает
         self.assertEqual(printed_output, expected_output)
 
-
+    @patch('builtins.input', side_effect=['-1', '0', '2', 'A', '4'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_get_user_input_invalid_then_valid(self, mock_stdout, mock_input):
+        """Тест на ввод значений"""
+        result = get_user_input("Введите число больше 2: ")
+        self.assertEqual(result, 4)  # Проверяем, что корректное значение возвращается
+        expected_output = (
+            "Ошибка: Размер должен быть положительным числом. Попробуйте снова.\n"
+            "Ошибка: Размер должен быть положительным числом. Попробуйте снова.\n"
+            "Ошибка: Размер должен быть положительным числом. Попробуйте снова.\n"
+            "Ошибка: invalid literal for int() with base 10: 'A'. Попробуйте снова.\n"
+        )
+        self.assertIn(expected_output, mock_stdout.getvalue())
 
 if __name__ == "__main__":
     unittest.main()
