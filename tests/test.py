@@ -207,7 +207,7 @@ class TestMazeGenerator(unittest.TestCase):
 
         # Перехватываем вывод в консоль
         with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            maze_gen.print_maze()  # Печатаем лабиринт
+            maze_gen.print_maze()  # Вызов метода print_maze для печати лабиринта
             printed_output = mock_stdout.getvalue().strip()  # Получаем строку, которую вывел метод
 
         # Ожидаемый вывод
@@ -221,6 +221,7 @@ class TestMazeGenerator(unittest.TestCase):
 
         # Проверяем, что вывод совпадает
         self.assertEqual(printed_output, expected_output)
+
 
 if __name__ == "__main__":
     unittest.main()
