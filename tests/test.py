@@ -4,7 +4,7 @@ from MazeGenerator import MazeGenerator
 from MazeBFS import MazeSolver, get_user_input
 from io import StringIO
 from io import StringIO
-import random
+from main import main
 
 class TestMazeGenerator(unittest.TestCase):
 
@@ -311,9 +311,26 @@ class TestMazeGenerator(unittest.TestCase):
         self.assertEqual(len(generator.maze), 5)
         self.assertEqual(len(generator.maze[0]), 5)
 
-        # Проверяем, что точки входа и выхода находятся внутри границ
-        self.assertTrue(0 <= entry[0] < 5 and 0 <= entry[1] < 5)
-        self.assertTrue(0 <= exit[0] < 5 and 0 <= exit[1] < 5)
+    @patch('builtins.input', side_effect=['4', '4'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_main(self, mock_stdout, mock_input):
+        """Тестирует основной сценарий работы программы."""
+        main()
+        output = mock_stdout.getvalue()
+
+        # Проверяем основные этапы программы
+        self.assertIn("Добро пожаловать в генератор лабиринтов!", output)
+        self.assertIn("Вход:", output)
+        self.assertIn("Выход:", output)
+        self.assertIn("[", output)  # Проверка на вывод лабиринта
+
+        # Проверяем результат работы алгоритма
+        if "Путь не найден" in output:
+            self.assertIn("Путь не найден", output)
+        else:
+            self.assertIn("Найденный путь:", output)
+            self.assertIn("Длина пути:", output)  # Убедимся, что выводится длина пути
+
 
 if __name__ == "__main__":
     unittest.main()

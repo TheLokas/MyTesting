@@ -2,7 +2,7 @@ from MazeGenerator import MazeGenerator
 from MazeBFS import MazeSolver, get_user_input
 
 
-if __name__ == "__main__":
+def main():
     print("Добро пожаловать в генератор лабиринтов!")
     rows = get_user_input("Введите количество строк лабиринта: ")
     cols = get_user_input("Введите количество столбцов лабиринта: ")
@@ -22,4 +22,5 @@ if __name__ == "__main__":
         print("\nПуть не найден!")
 
 
-
+if __name__ == "__main__":
+    main()
