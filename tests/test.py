@@ -1,6 +1,10 @@
 import unittest
+from unittest.mock import patch
 from MazeGenerator import MazeGenerator
 from MazeBFS import MazeSolver, get_user_input
+from io import StringIO
+from io import StringIO
+import random
 
 class TestMazeGenerator(unittest.TestCase):
 
@@ -190,6 +194,33 @@ class TestMazeGenerator(unittest.TestCase):
         sys.stdout = old_stdout
         return return_value
 
+    def test_print_maze(self):
+        # Задаем фиксированный лабиринт
+        maze_gen = MazeGenerator(5, 5)
+        maze_gen.maze = [
+            [1, 1, 1, 1, 1],
+            [1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1],
+            [1, 0, 1, 0, 1],
+            [1, 1, 1, 1, 1]
+        ]
+
+        # Перехватываем вывод в консоль
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            maze_gen.print_maze()  # Печатаем лабиринт
+            printed_output = mock_stdout.getvalue().strip()  # Получаем строку, которую вывел метод
+
+        # Ожидаемый вывод
+        expected_output = (
+            '[1, 1, 1, 1, 1]\n'
+            '[1, 0, 1, 0, 1]\n'
+            '[1, 0, 1, 0, 1]\n'
+            '[1, 0, 1, 0, 1]\n'
+            '[1, 1, 1, 1, 1]'
+        )
+
+        # Проверяем, что вывод совпадает
+        self.assertEqual(printed_output, expected_output)
 
 if __name__ == "__main__":
     unittest.main()
