@@ -9,6 +9,13 @@ class MazeSolver:
         self.cols = len(maze[0])
         self.directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Возможные направления: вправо, вниз, влево, вверх
 
+    def print_path(self, path):
+        """Выводит длину пути."""
+        if len(path)>0:
+            print(f"Длина пути: {len(path)}")
+        else:
+            print('Нет пути от входа до выхода.')
+
     def find_shortest_path(self):
         """Находит кратчайший путь от точки входа до выхода."""
         queue = deque([(self.entry, [self.entry])])
@@ -17,8 +24,8 @@ class MazeSolver:
 
         while queue:
             (current_row, current_col), path = queue.popleft()
-
             if (current_row, current_col) == self.exit:
+                self.print_path(path)
                 return path  # Возвращаем путь, когда достигнут выход
 
             for dr, dc in self.directions:
@@ -31,12 +38,6 @@ class MazeSolver:
 
         return []  # Возвращаем пустой список, если пути нет
 
-    def print_path(self, path):
-        """Выводит длину пути."""
-        if len(path)>0:
-            print(f"Длина пути: {len(path)}")
-        else:
-            print('Нет пути от входа до выхода.')
 
 def get_user_input(prompt):
     """Запрашивает ввод у пользователя и проверяет, что он корректен."""

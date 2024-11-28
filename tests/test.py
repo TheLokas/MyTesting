@@ -318,18 +318,18 @@ class TestMazeGenerator(unittest.TestCase):
         main()
         output = mock_stdout.getvalue()
 
-        # Проверяем основные этапы программы
+        # Проверяем приветствие
         self.assertIn("Добро пожаловать в генератор лабиринтов!", output)
+
+        # Проверяем этапы программы
         self.assertIn("Вход:", output)
         self.assertIn("Выход:", output)
 
-
         # Проверяем результат работы алгоритма
-        if "Путь не найден" in output:
-            self.assertIn("Путь не найден", output)
+        if "Нет пути от входа до выхода." in output:
+            self.assertIn("Нет пути от входа до выхода.", output)  # Проверяем сообщение об отсутствии пути
         else:
-            self.assertIn("Найденный путь:", output)
-            self.assertIn("Длина пути:", output)  # Убедимся, что выводится длина пути
+            self.assertIn("Длина пути:", output)  # Проверяем, что выводится длина найденного пути
 
 
 if __name__ == "__main__":

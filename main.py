@@ -15,11 +15,7 @@ def main():
 
     solver = MazeSolver(generator.maze, entry, exit)
     path = solver.find_shortest_path()
-    if path:
-        print("\nНайденный путь:")
-        solver.print_path(path)
-    else:
-        print("\nПуть не найден!")
+
 
 
 if __name__ == "__main__":
