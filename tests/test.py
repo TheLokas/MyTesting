@@ -5,6 +5,7 @@ from Maze import Maze
 from MazeBFS import MazeSolver
 from main import main
 import os
+import io
 
 class TestMaze(unittest.TestCase):
 
@@ -385,6 +386,61 @@ class TestMazeSolver(unittest.TestCase):
 
         # Проверка, что вывод правильный
         self.assertEqual(solver.reconstruct_path(path), expected_output)
+
+    def test_load_from_file_with_empty_line(self):
+        """Тест для метода load_from_file, чтобы убедиться, что пустые строки игнорируются."""
+
+        # Создаем файл с лабиринтом, содержащим пустую строку
+        maze_data = """0 1 0
+                       0 1 0
+
+                       0 0 0"""
+        with open('test_maze_with_empty_line.txt', 'w') as f:
+            f.write(maze_data)
+
+        self.maze = Maze()
+
+        # Загружаем лабиринт из файла
+        self.maze.load_from_file('test_maze_with_empty_line.txt')
+
+        # Проверка, что лабиринт был загружен правильно
+        expected_maze = [
+            [0, 1, 0],
+            [0, 1, 0],
+            [0, 0, 0]
+        ]
+        self.assertEqual(self.maze.maze, expected_maze)
+        self.assertTrue(self.maze.is_loaded)
+
+        # Удаляем файл после теста
+        os.remove('test_maze_with_empty_line.txt')
+
+    def test_load_from_file_with_unequal_row_lengths(self):
+        """Тест для метода load_from_file, чтобы убедиться, что лабиринт с разными длинами строк вызывает ошибку."""
+
+        # Создаем файл с лабиринтом, в котором строки разной длины
+        maze_data = """0 1 0
+                       0 1 0
+                       0 0"""
+        with open('test_maze_with_unequal_rows.txt', 'w') as f:
+            f.write(maze_data)
+
+        self.maze = Maze()
+
+        # Пытаемся загрузить лабиринт из файла и проверить, что возникает ошибка
+        self.maze.load_from_file('test_maze_with_unequal_rows.txt')
+
+        # Проверка, что лабиринт не был загружен из-за ошибки
+        self.assertFalse(self.maze.is_loaded)
+
+        # Удаляем файл после теста
+        os.remove('test_maze_with_unequal_rows.txt')
+
+
+
+
+
+
 
 
 
