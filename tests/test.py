@@ -140,7 +140,7 @@ class TestMaze(unittest.TestCase):
             os.remove('valid_maze.txt')
 
     def test_set_entry_and_exit_invalid(self):
-        """Тест для установки точек входа и выхода с неверными данными."""
+        """Тест для установки точек входа"""
         # Подготовка файла с валидным лабиринтом
         maze_data = """0 1 0
                        0 1 0
@@ -169,6 +169,36 @@ class TestMaze(unittest.TestCase):
         if os.path.exists('valid_maze.txt'):
             os.remove('valid_maze.txt')
 
+    def test_set_invalid_entry_point(self):
+        """Тест для установки неверной точки входа."""
+        # Подготовка файла с валидным лабиринтом
+        maze_data = """0 1 0
+                       0 1 0
+                       0 0 0"""
+        with open('valid_maze.txt', 'w') as f:
+            f.write(maze_data)
+
+        # Создание экземпляра Maze и загрузка лабиринта
+        self.maze = Maze()
+        self.maze.load_from_file('valid_maze.txt')
+
+        # Патчинг ввода для теста (вводим неверную точку входа)
+        with patch('builtins.input', side_effect=['3,3', '2,2']), patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.maze.set_entry_and_exit()
+            output = mock_stdout.getvalue()
+
+        # Ожидаемый вывод с ошибкой на точке входа
+        expected_output = "Неверная точка входа. Попробуйте снова.\n"
+
+        # Проверка, что вывод совпадает с ожидаемым
+        self.assertEqual(output, expected_output)
+        self.assertIsNone(self.maze.entry_point)  # Точка входа не установлена
+        self.assertIsNone(self.maze.exit_point)  # Точка выхода не установлена
+
+        # Удаление файла после теста
+        if os.path.exists('valid_maze.txt'):
+            os.remove('valid_maze.txt')
+
     def test_is_valid_point_valid(self):
         """Тест для проверки валидных точек внутри лабиринта."""
 
@@ -188,6 +218,57 @@ class TestMaze(unittest.TestCase):
         for point in valid_points:
             with self.subTest(point=point):
                 self.assertTrue(maze._is_valid_point(point[0], point[1]))
+
+
+    def test_set_entry_and_exit_invalid_format(self):
+        """Тест для проверки обработки ValueError при неверном формате ввода координат."""
+
+        # Подготовка файла с валидным лабиринтом
+        maze_data = """0 1 0
+                       0 1 0
+                       0 0 0"""
+        with open('valid_maze.txt', 'w') as f:
+            f.write(maze_data)
+
+        # Создание экземпляра Maze и загрузка лабиринта
+        self.maze = Maze()
+        self.maze.load_from_file('valid_maze.txt')
+
+        # Патчинг ввода для теста (вводим некорректный формат для координат)
+        with patch('builtins.input', side_effect=['invalid_format', '1,1']), patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.maze.set_entry_and_exit()
+            output = mock_stdout.getvalue()
+
+        # Ожидаемый вывод с ошибкой ввода
+        expected_output = "Ошибка ввода. Укажите координаты в формате x, y.\n"
+
+        # Проверка, что вывод совпадает с ожидаемым
+        self.assertEqual(output, expected_output)
+        self.assertIsNone(self.maze.entry_point)  # Точка входа не установлена
+        self.assertIsNone(self.maze.exit_point)  # Точка выхода не установлена
+
+        # Удаление файла после теста
+        if os.path.exists('valid_maze.txt'):
+            os.remove('valid_maze.txt')
+
+    def test_load_from_file_file_not_found(self):
+        """Тест для проверки обработки ошибки FileNotFoundError."""
+
+        # Создание экземпляра Maze
+        self.maze = Maze()
+
+        # Патчинг stdout для перехвата вывода
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.maze.load_from_file('non_existent_file.txt')  # Попытка загрузить несуществующий файл
+            output = mock_stdout.getvalue()
+
+        # Ожидаемый вывод при отсутствии файла
+        expected_output = "Файл non_existent_file.txt не найден.\n"
+
+        # Проверка, что вывод совпадает с ожидаемым
+        self.assertEqual(output, expected_output)
+        self.assertFalse(self.maze.is_loaded)  # Лабиринт не был загружен
+
 
     def test_is_valid_point_invalid(self):
         """Тест для проверки невалидных точек внутри лабиринта."""
