@@ -525,10 +525,129 @@ class TestMazeSolver(unittest.TestCase):
         os.remove('test_maze_with_unequal_rows.txt')
 
 
+class TestMazeSolverIntegration(unittest.TestCase):
+
+    def test_integration_valid_maze_with_path(self):
+        """Интеграционный тест для проверки загрузки лабиринта и нахождения пути."""
+
+        # Подготовка файла с лабиринтом (с путём от точки входа до выхода)
+        maze_data = """0 1 0 0 0
+                       0 1 0 1 0
+                       0 1 0 1 0
+                       0 0 0 0 0
+                       1 1 1 1 0"""
+        with open('valid_maze.txt', 'w') as f:
+            f.write(maze_data)
+
+        # Создание экземпляра Maze
+        self.maze = Maze()
+        self.maze.load_from_file('valid_maze.txt')  # Загрузка лабиринта из файла
+
+        # Устанавливаем точки входа и выхода
+        with patch('builtins.input', side_effect=['0,0', '4,4']):
+            self.maze.set_entry_and_exit()
+
+        # Проверка, что точки установлены правильно
+        self.assertEqual(self.maze.entry_point, (0, 0))
+        self.assertEqual(self.maze.exit_point, (4, 4))
+
+        # Создание экземпляра MazeSolver для поиска пути
+        solver = MazeSolver(self.maze.maze, self.maze.entry_point, self.maze.exit_point)
+
+        # Нахождение кратчайшего пути
+        path = solver.find_shortest_path()
+
+        # Ожидаемый путь (последовательность координат от точки входа до точки выхода)
+        expected_path = [(0, 0), (1, 0), (2, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4)]
+
+        # Проверка, что путь найден и он совпадает с ожидаемым
+        self.assertEqual(path, expected_path)
+
+        # Преобразуем путь в строку
+        path_str = solver.reconstruct_path(path)
+        expected_path_str = "Путь: (0, 0) -> (1, 0) -> (2, 0) -> (3, 0) -> (3, 1) -> (3, 2) -> (3, 3) -> (3, 4) -> (4, 4)\nДлина пути: 8 шагов"
+
+        # Проверка правильности преобразования пути
+        self.assertEqual(path_str, expected_path_str)
+
+        # Удаление файла после теста
+        if os.path.exists('valid_maze.txt'):
+            os.remove('valid_maze.txt')
 
 
+    def test_integration_no_path(self):
+        """Интеграционный тест для лабиринта, в котором нет пути от точки входа до точки выхода."""
+
+        # Подготовка файла с лабиринтом (без пути между точками входа и выхода)
+        maze_data = """0 1 1 1 0
+                       0 1 1 1 0
+                       0 1 1 1 0
+                       0 1 1 1 0
+                       0 1 0 0 0"""
+        with open('no_path_maze.txt', 'w') as f:
+            f.write(maze_data)
+
+        # Создание экземпляра Maze
+        self.maze = Maze()
+        self.maze.load_from_file('no_path_maze.txt')  # Загрузка лабиринта из файла
+
+        # Устанавливаем точки входа и выхода
+        with patch('builtins.input', side_effect=['0,0', '4,4']):
+            self.maze.set_entry_and_exit()
+
+        # Проверка, что точки установлены правильно
+        self.assertEqual(self.maze.entry_point, (0, 0))
+        self.assertEqual(self.maze.exit_point, (4, 4))
+
+        # Создание экземпляра MazeSolver для поиска пути
+        solver = MazeSolver(self.maze.maze, self.maze.entry_point, self.maze.exit_point)
+
+        # Нахождение кратчайшего пути
+        path = solver.find_shortest_path()
+
+        # Путь должен быть None, так как нет пути
+        self.assertIsNone(path)
+
+        # Преобразуем путь в строку
+        path_str = solver.reconstruct_path(path)
+        expected_path_str = "Путь не найден."
+
+        # Проверка правильности сообщения о несуществующем пути
+        self.assertEqual(path_str, expected_path_str)
+
+        # Удаление файла после теста
+        if os.path.exists('no_path_maze.txt'):
+            os.remove('no_path_maze.txt')
 
 
+    def test_integration_invalid_format(self):
+        """Интеграционный тест для проверки обработки ошибки некорректного формата файла."""
+
+        # Подготовка файла с некорректным форматом данных (например, символы, отличные от 0 и 1)
+        maze_data = """0 1 0
+                       1 2 0
+                       0 1 0"""
+        with open('invalid_format_maze.txt', 'w') as f:
+            f.write(maze_data)
+
+        # Создание экземпляра Maze
+        self.maze = Maze()
+
+        # Патчинг stdout для перехвата вывода
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.maze.load_from_file('invalid_format_maze.txt')  # Попытка загрузить файл с ошибкой формата
+            output = mock_stdout.getvalue()
+
+        # Ожидаемый вывод: ошибка формата данных
+        expected_output = "Ошибка: Неверный формат строки: '1 2 0'. Ожидаются только числа 1 и 0.\n"
+
+        # Проверка, что вывод совпадает с ожидаемым
+        self.assertEqual(output, expected_output)
+        self.assertFalse(self.maze.is_loaded)  # Лабиринт не был загружен
+
+        # Удаление файла после теста
+        if os.path.exists('invalid_format_maze.txt'):
+            os.remove('invalid_format_maze.txt')
 
 
 
