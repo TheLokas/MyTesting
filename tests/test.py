@@ -59,6 +59,13 @@ class TestMaze(unittest.TestCase):
         # Проверка, что maze остался пустым (или None, в зависимости от вашей логики)
         self.assertEqual(self.invalid_maze.maze, [])
 
+        # Патчим вывод в консоль
+        with patch('builtins.print') as mocked_print:
+            self.invalid_maze.display_maze()
+
+            # Проверка, что нужное сообщение было напечатано
+            mocked_print.assert_called_with("Лабиринт не загружен. Загрузите лабиринт из файла.")
+
 
     def test_display_maze_valid(self):
         """Тест для отображения лабиринта при корректно загруженном лабиринте."""
