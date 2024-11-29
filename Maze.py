@@ -45,9 +45,6 @@ class Maze:
         """
         Метод для отображения лабиринта в консоли.
         """
-        if not self.is_loaded:
-            print("Лабиринт не загружен. Загрузите лабиринт из файла.")
-            return
 
         print("Текущий лабиринт:")
         for row in self.maze:

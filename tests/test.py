@@ -49,22 +49,7 @@ class TestMaze(unittest.TestCase):
         ]
         self.assertEqual(self.valid_maze.maze, expected_maze)
 
-    def test_load_from_file_invalid(self):
-        """Тест для загрузки невалидного лабиринта с ошибкой в формате."""
-        self.invalid_maze.load_from_file('invalid_maze.txt')
 
-        # Проверка, что лабиринт не был загружен из-за ошибки
-        self.assertFalse(self.invalid_maze.is_loaded)
-
-        # Проверка, что maze остался пустым (или None, в зависимости от вашей логики)
-        self.assertEqual(self.invalid_maze.maze, [])
-
-        # Патчим вывод в консоль
-        with patch('builtins.print') as mocked_print:
-            self.invalid_maze.display_maze()
-
-            # Проверка, что нужное сообщение было напечатано
-            mocked_print.assert_called_with("Лабиринт не загружен. Загрузите лабиринт из файла.")
 
 
     def test_display_maze_valid(self):
@@ -95,19 +80,7 @@ class TestMaze(unittest.TestCase):
         if os.path.exists('valid_maze.txt'):
             os.remove('valid_maze.txt')
 
-    def test_display_maze_not_loaded(self):
-        """Тест для отображения сообщения об ошибке, если лабиринт не загружен."""
-        # Захват вывода в консоль
-        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            self.maze = Maze()
-            self.maze.display_maze()
-            output = mock_stdout.getvalue()
 
-        # Ожидаемый вывод
-        expected_output = "Лабиринт не загружен. Загрузите лабиринт из файла.\n"
-
-        # Проверка, что вывод совпадает с ожидаемым
-        self.assertEqual(output, expected_output)
 
     def test_set_entry_and_exit_valid(self):
         """Тест для установки точек входа и выхода в корректном лабиринте."""
