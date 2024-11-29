@@ -1,51 +1,67 @@
 from collections import deque
 
 class MazeSolver:
-    def __init__(self, maze, entry, exit):
+    def __init__(self, maze, entry, exit_):
+        """
+        Инициализация решателя лабиринта.
+        :param maze: Двумерный массив, представляющий лабиринт (0 - проходимый, 1 - стена).
+        :param entry: Точка входа (x, y).
+        :param exit_: Точка выхода (x, y).
+        """
         self.maze = maze
         self.entry = entry
-        self.exit = exit
-        self.rows = len(maze)
-        self.cols = len(maze[0])
-        self.directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Возможные направления: вправо, вниз, влево, вверх
+        self.exit = exit_
+        self.directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Список возможных направлений: вверх, вниз, влево, вправо
 
-    def print_path(self, path):
-        """Выводит длину пути."""
-        if len(path)>0:
-            print(f"Длина пути: {len(path)}")
-        else:
-            print('Нет пути от входа до выхода.')
+    def is_valid(self, x, y):
+        """
+        Проверяет, можно ли перейти в указанную точку.
+        :param x: Координата X.
+        :param y: Координата Y.
+        :return: True, если точка в пределах лабиринта и проходима, иначе False.
+        """
+        rows, cols = len(self.maze), len(self.maze[0])
+        return 0 <= x < rows and 0 <= y < cols and self.maze[x][y] == 0
 
     def find_shortest_path(self):
-        """Находит кратчайший путь от точки входа до выхода."""
-        queue = deque([(self.entry, [self.entry])])
-        visited = set()
+        """
+        Реализация поиска в ширину (BFS) для нахождения кратчайшего пути.
+        :return: Список координат кратчайшего пути от точки входа до точки выхода или None, если пути нет.
+        """
+        queue = deque([(self.entry, [])])  # Очередь: ((x, y), путь до текущей точки)
+        visited = set()  # Множество посещённых точек
         visited.add(self.entry)
 
         while queue:
-            (current_row, current_col), path = queue.popleft()
-            if (current_row, current_col) == self.exit:
-                self.print_path(path)
-                return path  # Возвращаем путь, когда достигнут выход
+            (current, path) = queue.popleft()
+            path = path + [current]
 
-            for dr, dc in self.directions:
-                new_row, new_col = current_row + dr, current_col + dc
+            # Если мы достигли выхода, возвращаем путь
+            if current == self.exit:
+                return path
 
-                if 0 <= new_row < self.rows and 0 <= new_col < self.cols and \
-                   self.maze[new_row][new_col] == 0 and (new_row, new_col) not in visited:
-                    visited.add((new_row, new_col))
-                    queue.append(((new_row, new_col), path + [(new_row, new_col)]))
+            # Проверяем все возможные направления
+            for dx, dy in self.directions:
+                nx, ny = current[0] + dx, current[1] + dy
+                if self.is_valid(nx, ny) and (nx, ny) not in visited:
+                    queue.append(((nx, ny), path))
+                    visited.add((nx, ny))
 
-        return []  # Возвращаем пустой список, если пути нет
+        # Если выхода нет, возвращаем None
+        return None
 
+    def reconstruct_path(self, path):
+        """
+        Преобразует путь в удобный для чтения вид и возвращает его длину.
+        :param path: Список координат пути.
+        :return: Строка, представляющая путь и его длину.
+        """
+        if not path:
+            return "Путь не найден."
 
-def get_user_input(prompt):
-    """Запрашивает ввод у пользователя и проверяет, что он корректен."""
-    while True:
-        try:
-            value = int(input(prompt))
-            if value <= 2:
-                raise ValueError("Размер должен быть положительным числом")
-            return value
-        except ValueError as e:
-            print(f"Ошибка: {e}. Попробуйте снова.")
+        # Преобразуем путь в строку
+        path_str = " -> ".join([f"({x}, {y})" for x, y in path])
+        path_length = len(path) - 1  # Длина пути: количество шагов (минус 1, если путь состоит из точек)
+
+        return f"Путь: {path_str}\nДлина пути: {path_length} шагов"
+

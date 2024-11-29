@@ -1,336 +1,392 @@
 import unittest
+from io import StringIO
 from unittest.mock import patch
-from MazeGenerator import MazeGenerator
-from MazeBFS import MazeSolver, get_user_input
-from io import StringIO
-from io import StringIO
+from Maze import Maze
+from MazeBFS import MazeSolver
 from main import main
+import os
 
-class TestMazeGenerator(unittest.TestCase):
+class TestMaze(unittest.TestCase):
 
+    def setUp(self):
+        """Подготовка к тестам. Создание файлов с лабиринтами."""
+        # Валидный лабиринт
+        self.valid_maze = Maze()
+        maze_data_valid = """0 1 0
+                             0 1 0
+                             0 0 0"""
+        with open('valid_maze.txt', 'w') as f:
+            f.write(maze_data_valid)
 
-    def test_initialization(self):
-        """Тест инициализации лабиринта."""
-        rows, cols = 10, 10
-        maze_generator = MazeGenerator(rows, cols)
+        # Невалидный лабиринт
+        self.invalid_maze = Maze()
+        maze_data_invalid = """0 1 0
+                               0 2 0  # Неверный символ (2)
+                               0 0 0"""
+        with open('invalid_maze.txt', 'w') as f:
+            f.write(maze_data_invalid)
 
-        self.assertEqual(maze_generator.rows, rows)
-        self.assertEqual(maze_generator.cols, cols)
-        self.assertEqual(len(maze_generator.maze), rows)
-        self.assertEqual(len(maze_generator.maze[0]), cols)
+    def tearDown(self):
+        """Удаление файлов после тестов."""
+        if os.path.exists('valid_maze.txt'):
+            os.remove('valid_maze.txt')
+        if os.path.exists('invalid_maze.txt'):
+            os.remove('invalid_maze.txt')
 
-        # Проверяем, что изначально все клетки заполнены стенами (1)
-        self.assertTrue(all(cell == 1 for row in maze_generator.maze for cell in row))
+    def test_load_from_file_valid(self):
+        """Тест для загрузки валидного лабиринта."""
+        self.valid_maze.load_from_file('valid_maze.txt')
 
+        # Проверка, что лабиринт был загружен
+        self.assertTrue(self.valid_maze.is_loaded)
 
-    def test_generate_maze(self):
-        """Тест генерации лабиринта."""
-        rows, cols = 10, 10
-        maze_generator = MazeGenerator(rows, cols)
-        maze_generator.generate_maze()
-
-        # Проверяем, что после генерации хотя бы один проход (0) присутствует
-        pass_found = any(cell == 0 for row in maze_generator.maze for cell in row)
-        self.assertTrue(pass_found)
-
-
-    def test_set_entry_and_exit(self):
-        """Тест установки входа и выхода в лабиринте."""
-        rows, cols = 10, 10
-        maze_generator = MazeGenerator(rows, cols)
-        maze_generator.generate_maze()
-        entry, exit = maze_generator.set_entry_and_exit()
-
-        # Проверяем, что вход и выход находятся на краю лабиринта
-        # Убедимся, что хотя бы одна из координат находится на краю
-        self.assertTrue(entry[0] == 0 or entry[0] == rows - 1 or entry[1] == 0 or entry[1] == cols - 1)
-        self.assertTrue(exit[0] == 0 or exit[0] == rows - 1 or exit[1] == 0 or exit[1] == cols - 1)
-
-        # Проверяем, что вход и выход разные
-        self.assertNotEqual(entry, exit)
-
-        # Проверяем, что вход и выход установлены как проходы (0)
-        self.assertEqual(maze_generator.maze[entry[0]][entry[1]], 0)
-        self.assertEqual(maze_generator.maze[exit[0]][exit[1]], 0)
-
-
-    def test_generate_maze_no_isolated_cells(self):
-        """Тест, который проверяет, что в сгенерированном лабиринте нет изолированных клеток."""
-        rows, cols = 10, 10
-        maze_generator = MazeGenerator(rows, cols)
-        maze_generator.generate_maze()
-
-        # Проверяем, что нет клеток, окруженных стенами
-        for row in range(1, rows - 1):
-            for col in range(1, cols - 1):
-                if maze_generator.maze[row][col] == 0:
-                    self.assertIn(maze_generator.maze[row + 1][col], [0, 1])
-                    self.assertIn(maze_generator.maze[row - 1][col], [0, 1])
-                    self.assertIn(maze_generator.maze[row][col + 1], [0, 1])
-                    self.assertIn(maze_generator.maze[row][col - 1], [0, 1])
-
-
-    def test_random_entry_and_exit(self):
-        """Тест, который проверяет, что вход и выход генерируются случайным образом."""
-        rows, cols = 10, 10
-        maze_generator = MazeGenerator(rows, cols)
-        maze_generator.generate_maze()
-
-        entries_and_exits = set()
-
-        for _ in range(100):  # Проверяем 100 случайных генераций
-            entry, exit = maze_generator.set_entry_and_exit()
-            entries_and_exits.add((entry, exit))
-
-        # Убедимся, что были различные комбинации входа и выхода
-        self.assertGreater(len(entries_and_exits), 1)
-
-
-    def test_negative_rows(self):
-        """Тест на отрицательные размеры лабиринта."""
-        with self.assertRaises(ValueError):
-            maze_generator = MazeGenerator(-5, 10)
-
-    def test_zero_rows(self):
-        """Тест на нулевые размеры лабиринта."""
-        with self.assertRaises(ValueError):
-            maze_generator = MazeGenerator(0, 10)
-
-    def test_invalid_row_string(self):
-        """Тест на строки вместо чисел для строк."""
-        with self.assertRaises(ValueError):
-            maze_generator = MazeGenerator("abc", 10)
-
-    def test_invalid_col_string(self):
-        """Тест на строки вместо чисел для столбцов."""
-        with self.assertRaises(ValueError):
-            maze_generator = MazeGenerator(10, "xyz")
-
-    def test_too_small_maze(self):
-        """Тест на слишком маленькие размеры лабиринта."""
-        with self.assertRaises(ValueError):
-            maze_generator = MazeGenerator(1, 1)
-
-    def test_find_shortest_path(self):
-        """Тест на поиск кратчайшего пути в лабиринте."""
-        maze = [
-            [0, 1, 0, 0, 0],
-            [0, 1, 0, 1, 0],
-            [0, 0, 0, 1, 0],
-            [1, 1, 0, 0, 0],
-            [0, 1, 1, 1, 0]
-        ]
-        entry = (0, 0)  # Вход
-        exit = (4, 4)  # Выход
-        solver = MazeSolver(maze, entry, exit)
-        path = solver.find_shortest_path()
-
-        # Ожидаем, что путь будет найден
-        self.assertGreater(len(path), 0, "Путь не найден.")
-
-        # Ожидаем, что конечная точка будет выходом
-        self.assertEqual(path[-1], exit, f"Неверный выход: {path[-1]}")
-
-    def test_no_path(self):
-        """Тест на случай, когда пути нет."""
-        maze = [
+        # Проверка, что лабиринт содержит правильные данные
+        expected_maze = [
             [0, 1, 0],
-            [1, 1, 0],
-            [0, 1, 0]
+            [0, 1, 0],
+            [0, 0, 0]
         ]
-        entry = (0, 0)  # Вход
-        exit = (2, 2)  # Выход
-        solver = MazeSolver(maze, entry, exit)
-        path = solver.find_shortest_path()
+        self.assertEqual(self.valid_maze.maze, expected_maze)
 
-        # Ожидаем, что путь не будет найден
-        self.assertEqual(path, [], "Путь должен быть пустым.")
+    def test_load_from_file_invalid(self):
+        """Тест для загрузки невалидного лабиринта с ошибкой в формате."""
+        self.invalid_maze.load_from_file('invalid_maze.txt')
 
-    def test_multiple_paths(self):
-        """Тест на лабиринт с несколькими путями."""
-        maze = [
-            [0, 1, 0, 0, 0],
-            [0, 1, 0, 1, 0],
-            [0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0]
-        ]
-        entry = (0, 0)  # Вход
-        exit = (4, 4)  # Выход
-        solver = MazeSolver(maze, entry, exit)
-        path = solver.find_shortest_path()
+        # Проверка, что лабиринт не был загружен из-за ошибки
+        self.assertFalse(self.invalid_maze.is_loaded)
 
-        # Ожидаем, что путь будет найден
-        self.assertGreater(len(path), 0, "Путь не найден.")
-
-        # Проверим, что путь заканчивается на выходе
-        self.assertEqual(path[-1], exit, f"Неверный выход: {path[-1]}")
-
-    def test_path_length(self):
-        """Тест на проверку длины пути."""
-        maze = [
-            [0, 1, 0, 0, 0],
-            [0, 1, 0, 1, 0],
-            [0, 0, 0, 1, 0],
-            [1, 1, 0, 0, 0],
-            [0, 1, 1, 1, 0]
-        ]
-        entry = (0, 0)  # Вход
-        exit = (4, 4)  # Выход
-        solver = MazeSolver(maze, entry, exit)
-        path = solver.find_shortest_path()
-
-        # Ожидаем, что путь имеет длину 9
-        self.assertEqual(len(path), 9, f"Ожидаемая длина пути 9, но получена {len(path)}.")
+        # Проверка, что maze остался пустым (или None, в зависимости от вашей логики)
+        self.assertEqual(self.invalid_maze.maze, [])
 
 
-    def _get_stdout(self):
-        """Получаем стандартный вывод в виде строки (для тестирования print)."""
-        import sys
-        from io import StringIO
-        old_stdout = sys.stdout
-        sys.stdout = StringIO()
-        return_value = sys.stdout.getvalue()
-        sys.stdout = old_stdout
-        return return_value
+    def test_display_maze_valid(self):
+        """Тест для отображения лабиринта при корректно загруженном лабиринте."""
+        # Подготовка файла с валидным лабиринтом
+        maze_data = """0 1 0
+                       0 1 0
+                       0 0 0"""
+        with open('valid_maze.txt', 'w') as f:
+            f.write(maze_data)
 
-    def test_print_maze(self):
-        # Задаем фиксированный лабиринт
-        maze_gen = MazeGenerator(5, 5)
-        maze_gen.maze = [
-            [1, 1, 1, 1, 1],
-            [1, 0, 1, 0, 1],
-            [1, 0, 1, 0, 1],
-            [1, 0, 1, 0, 1],
-            [1, 1, 1, 1, 1]
-        ]
+        # Создание экземпляра Maze и загрузка лабиринта
+        self.maze = Maze()
+        self.maze.load_from_file('valid_maze.txt')
 
-        # Перехватываем вывод в консоль
+        # Захват вывода в консоль
         with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            maze_gen.print_maze()  # Вызов метода print_maze для печати лабиринта
-            printed_output = mock_stdout.getvalue().strip()  # Получаем строку, которую вывел метод
+            self.maze.display_maze()
+            output = mock_stdout.getvalue()
 
         # Ожидаемый вывод
-        expected_output = (
-            '[1, 1, 1, 1, 1]\n'
-            '[1, 0, 1, 0, 1]\n'
-            '[1, 0, 1, 0, 1]\n'
-            '[1, 0, 1, 0, 1]\n'
-            '[1, 1, 1, 1, 1]'
-        )
+        expected_output = "Текущий лабиринт:\n0 1 0\n0 1 0\n0 0 0\n"
 
-        # Проверяем, что вывод совпадает
-        self.assertEqual(printed_output, expected_output)
+        # Проверка, что вывод совпадает с ожидаемым
+        self.assertEqual(output, expected_output)
 
-    def test_print_path_found(self):
-        # Задаем лабиринт с решением
-        maze = [
-            [1, 1, 1, 1, 1],
-            [1, 0, 0, 1, 1],
-            [1, 0, 0, 1, 1],
-            [1, 1, 0, 0, 1],
-            [1, 1, 1, 0, 1]
-        ]
-        entry = (1, 1)
-        exit = (4, 3)
+        # Удаление файла после теста
+        if os.path.exists('valid_maze.txt'):
+            os.remove('valid_maze.txt')
 
-        solver = MazeSolver(maze, entry, exit)
-
-        # Имитируем путь, например, (1, 1) -> (1, 2) -> (2, 2) -> (3, 2) -> (4, 2) -> (4, 3)
-        path = [(1, 1), (1, 2), (2, 2), (3, 2), (4, 2), (4, 3)]
-
-        # Перехватываем вывод в консоль
+    def test_display_maze_not_loaded(self):
+        """Тест для отображения сообщения об ошибке, если лабиринт не загружен."""
+        # Захват вывода в консоль
         with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            solver.print_path(path)  # Вызываем метод для печати пути
-            printed_output = mock_stdout.getvalue().strip()  # Получаем строку, которую вывел метод
+            self.maze = Maze()
+            self.maze.display_maze()
+            output = mock_stdout.getvalue()
 
-        # Ожидаемый вывод: длина пути
-        expected_output = "Длина пути: 6"
+        # Ожидаемый вывод
+        expected_output = "Лабиринт не загружен. Загрузите лабиринт из файла.\n"
 
-        # Проверяем, что вывод совпадает
-        self.assertEqual(printed_output, expected_output)
+        # Проверка, что вывод совпадает с ожидаемым
+        self.assertEqual(output, expected_output)
 
-    def test_print_path_no_solution(self):
-        # Задаем лабиринт без пути
-        maze = [
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1]
+    def test_set_entry_and_exit_valid(self):
+        """Тест для установки точек входа и выхода в корректном лабиринте."""
+        # Подготовка файла с валидным лабиринтом
+        maze_data = """0 1 0
+                       0 1 0
+                       0 0 0"""
+        with open('valid_maze.txt', 'w') as f:
+            f.write(maze_data)
+
+        # Создание экземпляра Maze и загрузка лабиринта
+        self.maze = Maze()
+        self.maze.load_from_file('valid_maze.txt')
+
+        # Патчинг ввода для теста (вводим точки входа и выхода)
+        with patch('builtins.input', side_effect=['0,0', '2,2']), patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.maze.set_entry_and_exit()
+            output = mock_stdout.getvalue()
+
+        # Ожидаемый вывод
+        expected_output = "Точка входа установлена: (0, 0)\nТочка выхода установлена: (2, 2)\n"
+
+        # Проверка, что вывод совпадает с ожидаемым
+        self.assertEqual(output, expected_output)
+        self.assertEqual(self.maze.entry_point, (0, 0))
+        self.assertEqual(self.maze.exit_point, (2, 2))
+
+        # Удаление файла после теста
+        if os.path.exists('valid_maze.txt'):
+            os.remove('valid_maze.txt')
+
+    def test_set_entry_and_exit_invalid(self):
+        """Тест для установки точек входа и выхода с неверными данными."""
+        # Подготовка файла с валидным лабиринтом
+        maze_data = """0 1 0
+                       0 1 0
+                       0 0 0"""
+        with open('valid_maze.txt', 'w') as f:
+            f.write(maze_data)
+
+        # Создание экземпляра Maze и загрузка лабиринта
+        self.maze = Maze()
+        self.maze.load_from_file('valid_maze.txt')
+
+        # Патчинг ввода для теста (вводим неверную точку входа и выхода)
+        with patch('builtins.input', side_effect=['0,0', '2,3']), patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.maze.set_entry_and_exit()
+            output = mock_stdout.getvalue()
+
+        # Ожидаемый вывод с ошибкой на точке выхода
+        expected_output = "Неверная точка выхода. Попробуйте снова.\n"
+
+        # Проверка, что вывод совпадает с ожидаемым
+        self.assertEqual(output, expected_output)
+        self.assertEqual(self.maze.entry_point, (0, 0))  # Точка входа должна быть установлена
+        self.assertIsNone(self.maze.exit_point)  # Точка выхода не установлена
+
+        # Удаление файла после теста
+        if os.path.exists('valid_maze.txt'):
+            os.remove('valid_maze.txt')
+
+    def test_is_valid_point_valid(self):
+        """Тест для проверки валидных точек внутри лабиринта."""
+
+        # Создание лабиринта внутри теста
+        maze = Maze()
+        maze_data = """0 1 0
+                       0 1 0
+                       0 0 0"""
+        maze.load_from_file('valid_maze.txt')
+
+        # Проверка валидных точек, которые внутри лабиринта и проходимы (значение 0)
+        valid_points = [
+            (0, 0),  # верхний левый угол
+            (2, 2),  # нижний правый угол
+            (2, 1),  # точка на нижней линии, проходимая
         ]
-        entry = (1, 1)
-        exit = (4, 3)
+        for point in valid_points:
+            with self.subTest(point=point):
+                self.assertTrue(maze._is_valid_point(point[0], point[1]))
 
-        solver = MazeSolver(maze, entry, exit)
+    def test_is_valid_point_invalid(self):
+        """Тест для проверки невалидных точек внутри лабиринта."""
 
-        # Путь отсутствует
+        # Создание лабиринта внутри теста
+        maze = Maze()
+        maze_data = """0 1 0
+                       0 1 0
+                       0 0 0"""
+        maze.load_from_file('valid_maze.txt')
+
+        # Проверка невалидных точек
+        invalid_points = [
+            (-1, 0),  # выход за границы по X
+            (0, -1),  # выход за границы по Y
+            (3, 0),  # выход за границы по X
+            (0, 3),  # выход за границы по Y
+            (0, 1),  # точка на стене (непроходимая)
+            (1, 1),  # точка на стене (непроходимая)
+        ]
+        for point in invalid_points:
+            with self.subTest(point=point):
+                self.assertFalse(maze._is_valid_point(point[0], point[1]))
+
+
+class TestMazeSolver(unittest.TestCase):
+
+    def test_is_valid_with_valid_points(self):
+        """Тест для метода is_valid с валидными точками."""
+
+        # Подготовка лабиринта внутри теста
+        maze_data = [
+            [0, 1, 0],
+            [0, 1, 0],
+            [0, 0, 0]
+        ]
+        entry = (0, 0)
+        exit_ = (2, 2)
+        solver = MazeSolver(maze_data, entry, exit_)
+
+        # Валидные точки (должны возвращать True)
+        valid_points = [
+            (0, 0),  # Точка входа, проходимая
+            (2, 2),  # Точка выхода, проходимая
+            (2, 1),  # Проходимая точка внизу
+            (1, 0),  # Проходимая точка сбоку
+        ]
+        for point in valid_points:
+            with self.subTest(point=point):
+                self.assertTrue(solver.is_valid(point[0], point[1]))
+
+    def test_is_valid_with_invalid_points(self):
+        """Тест для метода is_valid с невалидными точками."""
+
+        # Подготовка лабиринта внутри теста
+        maze_data = [
+            [0, 1, 0],
+            [0, 1, 0],
+            [0, 0, 0]
+        ]
+        entry = (0, 0)
+        exit_ = (2, 2)
+        solver = MazeSolver(maze_data, entry, exit_)
+
+        # Невалидные точки (должны возвращать False)
+        invalid_points = [
+            (-1, 0),  # Выход за пределы лабиринта (по X)
+            (0, -1),  # Выход за пределы лабиринта (по Y)
+            (3, 0),  # Выход за пределы лабиринта (по X)
+            (0, 3),  # Выход за пределы лабиринта (по Y)
+            (0, 1),  # Стена (непроходимая точка)
+            (1, 1),  # Стена (непроходимая точка)
+        ]
+        for point in invalid_points:
+            with self.subTest(point=point):
+                self.assertFalse(solver.is_valid(point[0], point[1]))
+
+
+    def test_find_shortest_path_valid(self):
+        """Тест для метода find_shortest_path с валидным лабиринтом."""
+
+        # Подготовка лабиринта внутри теста
+        maze_data = [
+            [0, 1, 0, 0],
+            [0, 1, 0, 1],
+            [0, 0, 0, 0],
+            [1, 1, 0, 0]
+        ]
+        entry = (0, 0)
+        exit_ = (2, 3)
+        solver = MazeSolver(maze_data, entry, exit_)
+
+        # Ожидаемый кратчайший путь
+        expected_path = [
+            (0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3)
+        ]
+
+        # Проверка кратчайшего пути
+        self.assertEqual(solver.find_shortest_path(), expected_path)
+
+    def test_find_shortest_path_no_path(self):
+        """Тест для метода find_shortest_path, когда пути нет."""
+
+        # Подготовка лабиринта внутри теста
+        maze_data = [
+            [0, 1, 0, 0],
+            [1, 1, 0, 1],
+            [0, 0, 0, 0],
+            [1, 1, 0, 1]
+        ]
+        entry = (0, 0)
+        exit_ = (3, 3)  # Выход заблокирован стенами
+        solver = MazeSolver(maze_data, entry, exit_)
+
+        # Проверка, что путь не найден
+        self.assertIsNone(solver.find_shortest_path())
+
+    def test_find_shortest_path_start_is_exit(self):
+        """Тест для метода find_shortest_path, когда точка входа совпадает с точкой выхода."""
+
+        # Подготовка лабиринта внутри теста
+        maze_data = [
+            [0, 1, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+        ]
+        entry = (0, 0)
+        exit_ = (0, 0)  # Точка входа совпадает с выходом
+        solver = MazeSolver(maze_data, entry, exit_)
+
+        # Ожидаемый кратчайший путь: точка входа сразу является выходом
+        expected_path = [(0, 0)]
+
+        # Проверка кратчайшего пути
+        self.assertEqual(solver.find_shortest_path(), expected_path)
+
+    def test_reconstruct_path_valid(self):
+        """Тест для метода reconstruct_path с валидным путем."""
+
+        # Подготовка лабиринта внутри теста
+        maze_data = [
+            [0, 1, 0, 0],
+            [0, 1, 0, 1],
+            [0, 0, 0, 0],
+            [1, 1, 0, 0]
+        ]
+        entry = (0, 0)
+        exit_ = (2, 3)
+        solver = MazeSolver(maze_data, entry, exit_)
+
+        # Пример пути
+        path = [
+            (0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3)
+        ]
+
+        # Ожидаемое преобразованное представление пути
+        expected_output = "Путь: (0, 0) -> (1, 0) -> (2, 0) -> (2, 1) -> (2, 2) -> (2, 3)\nДлина пути: 5 шагов"
+
+        # Проверка корректности преобразования пути
+        self.assertEqual(solver.reconstruct_path(path), expected_output)
+
+    def test_reconstruct_path_no_path(self):
+        """Тест для метода reconstruct_path, когда пути нет."""
+
+        # Подготовка лабиринта внутри теста
+        maze_data = [
+            [0, 1, 0, 0],
+            [1, 1, 0, 1],
+            [0, 0, 0, 0],
+            [1, 1, 0, 1]
+        ]
+        entry = (0, 0)
+        exit_ = (3, 3)  # Выход заблокирован стенами
+        solver = MazeSolver(maze_data, entry, exit_)
+
+        # Путь не найден, поэтому передаем пустой список
         path = []
 
-        # Перехватываем вывод в консоль
-        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-            solver.print_path(path)  # Вызываем метод для печати пути
-            printed_output = mock_stdout.getvalue().strip()  # Получаем строку, которую вывел метод
+        # Ожидаемый результат
+        expected_output = "Путь не найден."
 
-        # Ожидаемый вывод: сообщение о том, что пути нет
-        expected_output = "Нет пути от входа до выхода."
+        # Проверка, что вывод правильный
+        self.assertEqual(solver.reconstruct_path(path), expected_output)
 
-        # Проверяем, что вывод совпадает
-        self.assertEqual(printed_output, expected_output)
+    def test_reconstruct_path_single_step(self):
+        """Тест для метода reconstruct_path, когда путь состоит из одного шага (вход совпадает с выходом)."""
 
-    @patch('builtins.input', side_effect=['-1', '0', '2', 'A', '4'])
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_get_user_input_invalid_then_valid(self, mock_stdout, mock_input):
-        """Тест на ввод значений"""
-        result = get_user_input("Введите число больше 2: ")
-        self.assertEqual(result, 4)  # Проверяем, что корректное значение возвращается
-        expected_output = (
-            "Ошибка: Размер должен быть положительным числом. Попробуйте снова.\n"
-            "Ошибка: Размер должен быть положительным числом. Попробуйте снова.\n"
-            "Ошибка: Размер должен быть положительным числом. Попробуйте снова.\n"
-            "Ошибка: invalid literal for int() with base 10: 'A'. Попробуйте снова.\n"
-        )
-        self.assertIn(expected_output, mock_stdout.getvalue())
+        # Подготовка лабиринта внутри теста
+        maze_data = [
+            [0, 1, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+        ]
+        entry = (0, 0)
+        exit_ = (0, 0)  # Точка входа совпадает с точкой выхода
+        solver = MazeSolver(maze_data, entry, exit_)
 
+        # Путь состоит из одного шага
+        path = [(0, 0)]
 
-    @patch('builtins.input', side_effect=['5', '5'])
-    def test_get_user_input(self, mock_input):
-        """Тест ввода данных для строк и столбцов."""
-        rows = get_user_input("Введите количество строк лабиринта: ")
-        cols = get_user_input("Введите количество столбцов лабиринта: ")
-        self.assertEqual(rows, 5)
-        self.assertEqual(cols, 5)
+        # Ожидаемый результат
+        expected_output = "Путь: (0, 0)\nДлина пути: 0 шагов"
 
-    def test_maze_generation(self):
-        """Тест генерации лабиринта и установки входа/выхода."""
-        generator = MazeGenerator(5, 5)
-        generator.generate_maze()
-        entry, exit = generator.set_entry_and_exit()
-
-        # Проверяем, что лабиринт сгенерирован с правильными размерами
-        self.assertEqual(len(generator.maze), 5)
-        self.assertEqual(len(generator.maze[0]), 5)
-
-    @patch('builtins.input', side_effect=['4', '4'])
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_main(self, mock_stdout, mock_input):
-        """Тестирует основной сценарий работы программы."""
-        main()
-        output = mock_stdout.getvalue()
-
-        # Проверяем приветствие
-        self.assertIn("Добро пожаловать в генератор лабиринтов!", output)
-
-        # Проверяем этапы программы
-        self.assertIn("Вход:", output)
-        self.assertIn("Выход:", output)
-
-        # Проверяем результат работы алгоритма
-        if "Нет пути от входа до выхода." in output:
-            self.assertIn("Нет пути от входа до выхода.", output)  # Проверяем сообщение об отсутствии пути
-        else:
-            self.assertIn("Длина пути:", output)  # Проверяем, что выводится длина найденного пути
+        # Проверка, что вывод правильный
+        self.assertEqual(solver.reconstruct_path(path), expected_output)
 
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     unittest.main()
